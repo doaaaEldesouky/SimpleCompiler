@@ -1,3 +1,84 @@
+import nltk
+nltk.download('punkt')
+
+# تعريف الفئة TreeNode لتمثيل شجرة التحليل
+class TreeNode:
+    def __init__(self, value):
+        self.value = value
+        self.children = []
+
+    def add_child(self, child_node):
+        self.children.append(child_node)
+
+    def print_tree(self, level=0):
+        if level == 0:
+            print(self.value)
+        else:
+            print("│    " * (level - 1) + "└───" + self.value)
+        
+        for child in self.children:
+            child.print_tree(level + 1)
+
+
+# تنزيل مكتبة punkt إذا لم تكن موجودة
+nltk.download('punkt')
+
+# تعريف القواعد النحوية (الجرامر)
+variable_declaration_cfg = nltk.CFG.fromstring("""
+    S -> Statement
+    Statement -> Assignment | Conditional | PrintStatement
+    Assignment -> 'int' identifier '=' NUMBER ';'
+    Assignment -> 'float' identifier '=' NUMBER ';'
+    identifier -> 'a' | 'b' | 'c' | 'x' | 'y' | 'z' | 'r'
+    NUMBER -> DIGIT | DIGIT DIGITS
+    DIGIT -> '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
+    DIGITS -> DIGIT | DIGIT DIGITS
+    Conditional -> 'if' '(' identifier '>' NUMBER ')' '{' Statement '}'
+    PrintStatement -> 'print' '(' identifier ')' ';'
+""")
+
+# إنشاء المحلل بناءً على القواعد النحوية
+parser = nltk.ChartParser(variable_declaration_cfg)
+
+# تحديد مسار ملف النصوص
+file_path = r'C:\Users\Computec\Desktop\compiler pro\tx.txt'
+
+try:
+    # قراءة محتويات الملف
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+
+    # معالجة كل سطر في الملف
+    for line in lines:
+        # التحقق من السطر إذا كان يحتوي على كلمة "float"
+        if "float" not in line:
+            tokens = nltk.word_tokenize(line.strip())  # تقسيم السطر إلى كلمات
+
+            program_tree = TreeNode("Parse Tree:")  # إنشاء الجذر لشجرة التحليل
+
+            for tree in parser.parse(tokens):
+                # تحويل شجرة NLTK إلى شجرة TreeNode
+                def convert_nltk_tree_to_tree_node(nltk_tree, parent_node):
+                    if isinstance(nltk_tree, nltk.Tree):
+                        node = TreeNode(nltk_tree.label())
+                        parent_node.add_child(node)
+                        for child in nltk_tree:
+                            convert_nltk_tree_to_tree_node(child, node)
+                    else:
+                        parent_node.add_child(TreeNode(str(nltk_tree)))
+
+                convert_nltk_tree_to_tree_node(tree, program_tree)
+                program_tree.print_tree()  # طباعة شجرة التحليل بتنسيق TreeNode
+                
+                # عرض الشجرة باستخدام NLTK
+                tree.pretty_print()
+                print("------------------------------------------------------------------------")
+
+except FileNotFoundError:
+    print(f"خطأ: الملف '{file_path}' غير موجود. الرجاء التحقق من المسار.")
+except Exception as e:
+    print(f"حدث خطأ غير متوقع: {e}")
+
 # from graphviz import Digraph
 
 # # إنشاء كائن للرسم البياني
@@ -84,45 +165,3 @@
 
 # # عرض الرسم البياني
 # dot.render('parse_tree', format='png', view=True)
-from anytree import Node, RenderTree
-
-# تعريف الجذر والشجرة باستخدام Nodes
-S = Node("S")
-statement = Node("Statement", parent=S)
-assignment = Node("Assignment", parent=statement)
-conditional = Node("Conditional", parent=statement)
-print_statement = Node("PrintStatement", parent=statement)
-loop_statement = Node("LoopStatement", parent=statement)
-
-# بناء الشجرة مع العلاقات بين العقد
-assignment_type = Node("Assignment Type", parent=assignment)
-loop_for = Node("For Loop", parent=loop_statement)
-loop_while = Node("While Loop", parent=loop_statement)
-conditional_if = Node("If Statement", parent=conditional)
-
-# إضافة القواعد الأخرى (مثل Type, Expression, وغيرها)
-type_int = Node("'int'", parent=assignment_type)
-type_float = Node("'float'", parent=assignment_type)
-type_string = Node("'string'", parent=assignment_type)
-
-identifier = Node("IDENTIFIER", parent=assignment_type)
-expression = Node("Expression", parent=assignment_type)
-
-# إضافة القواعد الخاصة بـ Expression
-identifier_expression = Node("IDENTIFIER", parent=expression)
-number_expression = Node("NUMBER", parent=expression)
-
-# بناء الشجرة لقاعدة Conditional
-condition = Node("Condition", parent=conditional_if)
-identifier_condition = Node("IDENTIFIER", parent=condition)
-operator = Node("'>'", parent=condition)
-number = Node("NUMBER", parent=condition)
-
-# إضافة القواعد الأخرى لـ Loop
-loop_condition = Node("Condition", parent=loop_for)
-loop_expression = Node("Expression", parent=loop_for)
-
-# طباعة الشجرة بشكل هرمي مع إبراز العقد والأفرع لتوضيح شجرة التحليل
-print("Parse Tree:")
-for pre, fill, node in RenderTree(S):
-    print(f"{pre}{node.name}")

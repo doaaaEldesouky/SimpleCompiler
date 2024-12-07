@@ -22,3 +22,11 @@ ValueError: Invalid token: random
 
 DEBUG:root:Parsing expression: a + b
 DEBUG:root:Result: a + b
+ERROR:root:Error: Invalid token: random
+ERROR:root:Traceback: Traceback (most recent call last):
+  File "c:\Users\Computec\Desktop\compiler pro\error_handling.py", line 50, in check_for_errors
+    raise ValueError(f"Invalid token: {token}")
+ValueError: Invalid token: random
+
+DEBUG:root:Parsing expression: a + b
+DEBUG:root:Result: a + b
