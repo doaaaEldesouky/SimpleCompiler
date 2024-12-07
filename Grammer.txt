@@ -1,0 +1,22 @@
+S: Statement
+Statement: Assignment | Conditional | PrintStatement | LoopStatement | Block
+Assignment: Type IDENTIFIER '=' Expression ';'
+LoopStatement: 'for' '(' Assignment Expression ';' Expression ')' Block
+             | 'while' '(' Expression ')' Block
+Type: 'int' | 'float' | 'string'
+IDENTIFIER: [a-zA-Z_][a-zA-Z0-9_]*
+Expression: Expression '+' Term | Expression '-' Term | Term
+Term: Term '*' Factor | Term '/' Factor | Factor
+Factor: NUMBER | IDENTIFIER | '(' Expression ')'
+Value: NUMBER | IDENTIFIER
+Conditional: 'if' '(' Condition ')' Block
+Condition: IDENTIFIER '>' Expression
+          | IDENTIFIER '<' Expression
+          | IDENTIFIER '==' Expression
+          | IDENTIFIER '>=' Expression
+          | IDENTIFIER '<=' Expression
+          | IDENTIFIER '!=' Expression
+PrintStatement: 'print' '(' IDENTIFIER ')' ';'
+Block: '{' (Statement)* '}'
+NUMBER: DIGIT+ | DIGIT+ '.' DIGIT+
+DIGIT: '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
