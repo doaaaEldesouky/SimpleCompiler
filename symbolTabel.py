@@ -1,91 +1,84 @@
 import re
 
-# Unordered Symbol Table
-def generate_symbol_table(code):
+# Generate cross-reference symbol table
+def generate_cross_reference_table(code):
     symbol_table = []
     line_number = 1
-    current_address = 0  
-    counter = 0
+    current_address = 0  # Start from 0
+    counter = 1
+    data_type_sizes = {
+        "int": 2,     # int is 2 bytes
+        "char": 1,    # char is 1 byte
+        "float": 1,   # float is 1 byte
+        "string": 1   # string is 1 byte per character
+    }
 
     for line in code.splitlines():
-        # مطابقة تعريف المتغير
-        match = re.match(r"^\s*(?P<data_type>\w+)\s+(?P<variable_name>\w+)\s*=\s*(?P<value>.+);$", line)
+        match = re.match(r"^\s*(?P<data_type>\w+)\s+(?P<variable_def>.+);$", line)
         if match:
             data_type = match.group("data_type")
-            variable_name = match.group("variable_name")
+            variable_def = match.group("variable_def")
 
-            # إدخال في جدول الرموز
-            symbol_table.append({
-                "Counter": counter,
-                "Variable Name": variable_name,
-                "Address": current_address,
-                "Data Type": data_type,
-                "No. of Dimensions": 0,
-                "Line Declaration": line_number,
-                "Reference Line": set(),  # مجموعة فارغة
-            })
-            counter += 1
-            current_address += 2  # تحديث العنوان
+            # Handle multiple variables in one line
+            for var in variable_def.split(","):
+                var_match = re.match(r"(?P<variable_name>\w+)(\[(?P<dim1>\d+)\](\[(?P<dim2>\d+)\])?)?", var.strip())
+                if var_match:
+                    variable_name = var_match.group("variable_name")
+                    dim1 = int(var_match.group("dim1")) if var_match.group("dim1") else 1
+                    dim2 = int(var_match.group("dim2")) if var_match.group("dim2") else 1
 
-        # تحديث مراجع الرموز في الأسطر
+                    # Calculate size
+                    size = data_type_sizes.get(data_type, 0) * dim1 * dim2
+
+                    # Add entry to the symbol table
+                    symbol_table.append({
+                        "Counter": counter,
+                        "Variable Name": variable_name,
+                        "Object Address": current_address,
+                        "Type": data_type,
+                        "Dim": (dim1, dim2) if dim1 > 1 or dim2 > 1 else 0,
+                        "Line Declared": line_number,
+                        "Line Reference": set()
+                    })
+                    counter += 1
+                    current_address += size  # Increment address
+
+        # Update line references
         for variable in re.findall(r"\b\w+\b", line):
             for entry in symbol_table:
                 if entry["Variable Name"] == variable:
-                    if line_number != entry["Line Declaration"]:  # ليس خط التعريف
-                        entry["Reference Line"].add(line_number)
+                    if line_number != entry["Line Declared"]:
+                        entry["Line Reference"].add(line_number)
                     break
 
         line_number += 1
 
     return symbol_table
 
-# Ordered Symbol Table
-def generate_symbol_table_ordered(code):
-    symbol_table = generate_symbol_table(code)
+# Example C code
+c_code = """\
+int i, j[5];
+char C, index[5][6], block[5];
+float f;
+i = 0;
+i = i + k;
+f = f + i;
+C = 'x';
+block[4] = C;
+"""
 
-    # ترتيب الجدول أبجدياً حسب اسم المتغير
-    symbol_table.sort(key=lambda x: x["Variable Name"])
+# Generate the symbol table
+symbol_table = generate_cross_reference_table(c_code)
 
-    # تحديث القيم بعد الترتيب
-    counter = 0
-    for entry in symbol_table:
-        entry["Counter"] = counter
-        entry["Address"] = counter * 2  # تحديث العنوان
-        counter += 1
+# Print the table in a format similar to the image
+header = f"{'Counter':<10}{'Variable Name':<15}{'Object Address':<15}{'Type':<10}{'Dim':<10}{'Line Declared':<15}{'Line Reference':<15}"
+separator = "-" * 90
 
-    return symbol_table
-
-
-# قراءة الكود من الملف
-file_path = "C:/Users/Computec/Desktop/compiler pro/source_code.txt"
-with open(file_path, 'r') as file:
-    code = file.read()
-
-# إنشاء الجدول غير المرتب
-symbol_table = generate_symbol_table(code)
-
-# طباعة الجدول غير المرتب
-header = f"{'Counter':<8}{'VariableName':<15}{'Address':<10}{'Data Type':<15}{'No.of Dimensions':<20}{'LineDeclaration':<20}{'ReferenceLine':<25}"
-separator_length = 100  # You can adjust this value as needed
-separator = "-" * separator_length
-
-
-print("\nUnordered Symbol Table:\n")
 print(separator)
 print(header)
 print(separator)
 for entry in symbol_table:
-    print(f"{entry['Counter']:<8}{entry['Variable Name']:<15}{entry['Address']:<10}{entry['Data Type']:<15}{entry['No. of Dimensions']:<20}{entry['Line Declaration']:<20}{str(entry['Reference Line']).replace('set()', '{}'):<25}")
-print(separator)
-
-# إنشاء الجدول المرتب
-symbol_table_ordered = generate_symbol_table_ordered(code)
-
-# طباعة الجدول المرتب
-print("\nOrdered Symbol Table:\n")
-print(separator)
-print(header)
-print(separator)
-for entry in symbol_table_ordered:
-    print(f"{entry['Counter']:<8}{entry['Variable Name']:<15}{entry['Address']:<10}{entry['Data Type']:<15}{entry['No. of Dimensions']:<20}{entry['Line Declaration']:<20}{str(entry['Reference Line']).replace('set()', '{}'):<25}")
+    dim = f"{entry['Dim'][0]}x{entry['Dim'][1]}" if isinstance(entry["Dim"], tuple) else entry["Dim"]
+    line_ref = ", ".join(map(str, sorted(entry["Line Reference"]))) if entry["Line Reference"] else "-"
+    print(f"{entry['Counter']:<10}{entry['Variable Name']:<15}{entry['Object Address']:<15}{entry['Type']:<10}{dim:<10}{entry['Line Declared']:<15}{line_ref:<15}")
 print(separator)

@@ -20,3 +20,7 @@ PrintStatement: 'print' '(' IDENTIFIER ')' ';'
 Block: '{' (Statement)* '}'
 NUMBER: DIGIT+ | DIGIT+ '.' DIGIT+
 DIGIT: '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
+
+# Expression can contain multiple arithmetic operations such as addition and subtraction between terms.
+#Term is another arithmetic unit that involves operations like multiplication and division.
+#Factor is the basic unit, such as numbers, identifiers (variables), or other expressions enclosed in parentheses.

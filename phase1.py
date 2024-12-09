@@ -11,7 +11,7 @@ with open('source_code.txt', 'r') as file:
 tokens_pattern = r'\b\w+\b|[^\w\s]'
 lexemes = re.findall(tokens_pattern, source_code)
 
-# تصنيف التوكنات
+# تصنيف التوكنات  
 def classify_lexeme(lexeme):
     keywords = {"for", "while", "if", "else", "print", "int", "float", "string"}
     if lexeme.isdigit():
@@ -135,15 +135,18 @@ display_table("LEXEME AND TOKEN", ["LEXEME", "TOKEN"], token_list)
 
 # عرض عدد التوكنات
 def display_token_count():
+    total_tokens = sum(token_count.values())  # حساب إجمالي عدد التوكنات
+
     window = tk.Tk()
     window.title("Token Counts")
 
-    text_box = Text(window, width=40, height=10)
+    text_box = Text(window, width=40, height=15)
     text_box.pack(pady=20)
 
     text_box.insert(tk.END, "Token Counts:\n")
     for token, count in token_count.items():
         text_box.insert(tk.END, f"{token}: {count}\n")
+    text_box.insert(tk.END, f"\nTotal Tokens: {total_tokens}\n")  # عرض الإجمالي
 
     window.mainloop()
 
